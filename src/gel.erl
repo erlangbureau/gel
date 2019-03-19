@@ -8,6 +8,8 @@
 -export([checkout/2, merge/2]).
 -export([log/1]).
 
+-export([to_list/1]).
+
 %% API
 init(Repository) ->
     gel_repo:init(to_list(Repository)).
