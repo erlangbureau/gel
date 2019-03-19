@@ -21,6 +21,7 @@ new(Repository) ->
     ],
     Opts   = [{body_format, binary}],
     Result = httpc:request(post,{Url,Headers,"application/json",Json},[],Opts),
+    erlang:display(Result).
     case Result of
         {ok,{{"HTTP/1.1",201,"Created"}, _, ReplyJson}} ->
             ReplyMap = jsx:decode(ReplyJson, [return_maps]),

@@ -21,7 +21,7 @@ init(Repository) ->
     _  = os:cmd("cd " ++ Path ++ " && git push -u origin master"),
     _  = os:cmd("cd " ++ Path ++ " && git checkout -b devel "
         "&& git push -u origin devel"),
-    {ok, Url}.
+    {ok, list_to_binary(Url)}.
 
 pull(Repository) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
