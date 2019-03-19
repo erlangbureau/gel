@@ -19,7 +19,8 @@ new(Repository) ->
         {"Authorization", "token " ++ Token}, 
         {"User-Agent", "Gel"}
     ],
-    Result = httpc:request(post,{Url, Headers, "application/json", Json},[],[]),
+    Opts   = [{body_format, binary}],
+    Result = httpc:request(post,{Url,Headers,"application/json",Json},[],Opts),
     erlang:display(Result),
     case Result of
         {ok,{{"HTTP/1.1",201,"Created"}, _, ReplyJson}} ->
