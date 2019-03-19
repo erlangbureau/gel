@@ -29,7 +29,7 @@ new(Repository) ->
             {ok, gel:to_list(ReposUrl)};
         {ok,{{"HTTP/1.1",422,"Unprocessable Entity"}, _, ReplyJson}} ->
             ReplyMap = jsx:decode(ReplyJson, [return_maps]),
-            ErrorMap = maps:get(<<"errors">>, ReplyMap),
+            [ErrorMap] = maps:get(<<"errors">>, ReplyMap),
             Message  = maps:get(<<"message">>, ErrorMap),
             {error, Message};
         _ ->

@@ -17,7 +17,7 @@ init(Repository) ->
     _  = os:cmd("cd " ++ Path ++ " && git init && "
         "echo yes | git remote add origin " ++ Url),
     ok = file:write_file(Path ++ "/README.MD", list_to_binary(Repository)),
-    ok = commit(Repository, "initial commit"),
+    {ok, _}   = commit(Repository, "initial commit"),
     _  = os:cmd("cd " ++ Path ++ " && git push -u origin master"),
     _  = os:cmd("cd " ++ Path ++ " && git checkout -b devel "
         "&& git push -u origin devel"),
