@@ -2,7 +2,7 @@
 -author("Kalyta Bogdan").
 
 %% API
--export([init/2]).
+-export([init/1]).
 -export([pull/1, push/1]).
 -export([commit/2]). 
 -export([checkout/2, merge/2]).

@@ -2,7 +2,7 @@
 -author("Kalyta Bogdan").
 
 %% API
--export(new/1).
+-export([new/1]).
 
 
 %% API
@@ -20,6 +20,7 @@ new(Repository) ->
         {"User-Agent", "Gel"}
     ],
     Result = httpc:request(post,{Url, Headers, "application/json", Json},[],[]),
+    erlang:display(Result),
     case Result of
         {ok,{{"HTTP/1.1",201,"Created"}, _, ReplyJson}} ->
             ReplyMap = jsx:decode(ReplyJson, [return_maps]),
