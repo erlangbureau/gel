@@ -6,10 +6,12 @@
 -export([pull/1, push/1]).
 -export([commit/2]). 
 -export([checkout/2, merge/2]).
+-export([log/1]).
 
 %% API
-init(Repository, Url) ->
+init(Repository) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
+    {ok, Url} = gel_hub:new(Repository),
     Path      = Dir ++ Repository,
     _  = os:cmd("mkdir " ++ Path),
     _  = os:cmd("cd " ++ Path ++ " && git init && "
@@ -19,7 +21,7 @@ init(Repository, Url) ->
     _  = os:cmd("cd " ++ Path ++ " && git push -u origin master"),
     _  = os:cmd("cd " ++ Path ++ " && git checkout -b devel "
         "&& git push -u origin devel"),
-    ok.
+    {ok, Url}.
 
 pull(Repository) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
@@ -52,3 +54,11 @@ merge(Repository, Branch) ->
     Result    = os:cmd("cd " ++ Path ++ " && git merge " ++ Branch),
     {ok, _}   = push(Repository),
     {ok, Result}.
+
+log(Repository) ->
+    {ok, Dir} = application:get_env(gel, repos_dir),
+    Path      = Dir ++ Repository,
+    Result    = os:cmd("cd " ++ Path ++ " && git log"),
+    {ok, Result}.
+
+

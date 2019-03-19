@@ -2,7 +2,8 @@
 Add to configuration file
 ```
 {gel, [
-    {repos_dir, "/opt/repos/"}
+    {repos_dir, "/opt/repos/"},
+    {github_access_token, "8e8305c13663e82167acd79ecca383c9ed2e0328}
 ]},
 ```
 
