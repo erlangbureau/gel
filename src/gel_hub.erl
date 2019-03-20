@@ -9,7 +9,7 @@
 new(Repository) ->
     {ok, Token} = application:get_env(gel, github_access_token),
     Map = #{
-        name => Repository, 
+        name => list_to_binary(Repository), 
         description => <<"Created with Git Erlang Library">>, 
         private => true
     },
