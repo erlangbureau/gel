@@ -68,6 +68,26 @@ merge(Repository, Branch) ->
 log(Repository) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    [10,48,10 | Result] = lists:reverse(os:cmd("cd " ++ Path ++ 
+    [10,48,10 | ReversedList] = lists:reverse(os:cmd("cd " ++ Path ++ 
         " && git log && echo $?")),
-    {ok, lists:reverse(Result)}.
+    Binary = list_to_binary(lists:reverse(ReversedList)),
+    [_ | ListOfBinary] = binary:split(<<"\n\n", Binary/binary>>, [<<"\n\ncommit ">>], [global]),
+    bin_to_map(ListOfBinary).
+
+bin_to_map(Bins) ->
+    bin_to_map(Bins, []).
+bin_to_maps([], Maps) ->
+    {ok, Maps};
+bin_to_maps([Bin | Bins], Maps) ->
+    [Commit, WithoutCommit] = binary:split(Bin,[<<"\nAuthor: ">>]),
+    [Author, WithoutAuthor] = binary:split(WithoutCommit, [<<"\nDate:   ">>]),
+    [Date, Desc] = binary:split(WithoutAuthor, [<<"\n\n    ">>]),
+    Date = binary:part(Bin, {AuthorLen + DLen, DateLen}),
+    Desc = binary:part(Bin, {DateLen + Len, byte_size(Bin)}),
+    Map = #{
+        commit      => Commit,
+        author      => Author,
+        date        => Date,
+        description => Desc
+    },
+    bin_to_maps(Bins, [Map | Maps]).
