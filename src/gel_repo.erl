@@ -13,7 +13,7 @@ init(Repository) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     {ok, Url} = gel_hub:new(Repository),
     Path      = Dir ++ Repository,
-    case file:make_dir(Path) of ->
+    case file:make_dir(Path) of
         ok ->
             [10,48,10 | _] = lists:reverse(os:cmd("cd "++ Path ++ 
                 " && git init && echo yes | git remote add origin " ++ Url ++ 
