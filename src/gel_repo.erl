@@ -76,9 +76,9 @@ log(Repository) ->
 
 bin_to_map(Bins) ->
     bin_to_map(Bins, []).
-bin_to_maps([], Maps) ->
+bin_to_map([], Maps) ->
     {ok, Maps};
-bin_to_maps([Bin | Bins], Maps) ->
+bin_to_map([Bin | Bins], Maps) ->
     [Commit, WithoutCommit] = binary:split(Bin,[<<"\nAuthor: ">>]),
     [Author, WithoutAuthor] = binary:split(WithoutCommit, [<<"\nDate:   ">>]),
     [Date, Desc] = binary:split(WithoutAuthor, [<<"\n\n    ">>]),
@@ -88,4 +88,4 @@ bin_to_maps([Bin | Bins], Maps) ->
         date        => Date,
         description => Desc
     },
-    bin_to_maps(Bins, [Map | Maps]).
+    bin_to_map(Bins, [Map | Maps]).
