@@ -60,7 +60,7 @@ checkout(Repository, Branch) ->
 merge(Repository, Branch) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    [10,48,10 | Result] = lists:reverse(("cd " ++ Path ++ 
+    [10,48,10 | Result] = lists:reverse(os:cmd("cd " ++ Path ++ 
         " && git merge " ++ Branch ++ " && echo $?")),
     {ok, _}   = push(Repository),
     {ok, lists:reverse(Result)}.
