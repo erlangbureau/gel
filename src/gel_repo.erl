@@ -82,8 +82,6 @@ bin_to_maps([Bin | Bins], Maps) ->
     [Commit, WithoutCommit] = binary:split(Bin,[<<"\nAuthor: ">>]),
     [Author, WithoutAuthor] = binary:split(WithoutCommit, [<<"\nDate:   ">>]),
     [Date, Desc] = binary:split(WithoutAuthor, [<<"\n\n    ">>]),
-    Date = binary:part(Bin, {AuthorLen + DLen, DateLen}),
-    Desc = binary:part(Bin, {DateLen + Len, byte_size(Bin)}),
     Map = #{
         commit      => Commit,
         author      => Author,
