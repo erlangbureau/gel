@@ -68,24 +68,57 @@ merge(Repository, Branch) ->
 log(Repository) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    [10,48,10 | ReversedList] = lists:reverse(os:cmd("cd " ++ Path ++ 
-        " && git log && echo $?")),
-    Binary = list_to_binary(lists:reverse(ReversedList)),
-    [_ | ListOfBinary] = binary:split(<<"\n\n", Binary/binary>>, [<<"\n\ncommit ">>], [global]),
-    bin_to_map(ListOfBinary).
+    {ok, File} = file:read_file(Path ++ "/.git/logs/HEAD"),
+    Logs = binary:split(File, [<<"\n">>], [global]),
+    log(Logs,[]).
 
-bin_to_map(Bins) ->
-    bin_to_map(Bins, []).
-bin_to_map([], Maps) ->
-    {ok, Maps};
-bin_to_map([Bin | Bins], Maps) ->
-    [Commit, WithoutCommit] = binary:split(Bin,[<<"\nAuthor: ">>]),
-    [Author, WithoutAuthor] = binary:split(WithoutCommit, [<<"\nDate:   ">>]),
-    [Date, Desc] = binary:split(WithoutAuthor, [<<"\n\n    ">>]),
-    Map = #{
-        commit      => Commit,
-        author      => Author,
-        date        => Date,
-        description => Desc
-    },
-    bin_to_map(Bins, [Map | Maps]).
+log([], Result) ->
+    {ok, Result};
+log([Binary | BinTail], Maps) ->
+    [PredCommit, WithoutPredCommit] = binary:split(Bin,[<<" ">>]),
+    [Commit, WithoutCommit] = binary:split(WithoutPredCommit,[<<" ">>]),
+    [AuthorIncomplete, WithoutAuthor] = binary:split(WithoutCommit,[<<"> ">>]),
+    Author = <<AuthorIncomplete/binary, ">">>,
+    [DateTime, WithoutDateTime] = binary:split(WithoutAuthor,[<<"\t">>]),
+    [Seconds, TimeZone] = binary:split(WithoutAuthor,[<<" ">>]),
+    [Action, Description] = binary:split(WithoutDateTime,[<<": ">>]),
+    Result = 
+        case Action of
+            <<"commit", _Rest/binary>> ->
+                Map = #{
+                    commit      => Commit,
+                    author      => Author,
+                    time        => Seconds,
+                    time_zone   => TimeZone,
+                    description => Desc
+                },
+                [Map | Maps];
+            _ ->
+                Maps
+        end,
+    log(BinTail, Result).
+
+%log(Repository) ->
+%    {ok, Dir} = application:get_env(gel, repos_dir),
+%    Path      = Dir ++ Repository,
+%    [10,48,10 | ReversedList] = lists:reverse(os:cmd("cd " ++ Path ++ 
+%        " && git log && echo $?")),
+%    Binary = list_to_binary(lists:reverse(ReversedList)),
+%    [_ | ListOfBinary] = binary:split(<<"\n\n", Binary/binary>>, [<<"\n\ncommit ">>], [global]),
+%    bin_to_map(ListOfBinary).
+
+%bin_to_map(Bins) ->
+%    bin_to_map(Bins, []).
+%bin_to_map([], Maps) ->
+%    {ok, Maps};
+%bin_to_map([Bin | Bins], Maps) ->
+%    [Commit, WithoutCommit] = binary:split(Bin,[<<"\nAuthor: ">>]),
+%    [Author, WithoutAuthor] = binary:split(WithoutCommit, [<<"\nDate:   ">>]),
+%    [Date, Desc] = binary:split(WithoutAuthor, [<<"\n\n    ">>]),
+%    Map = #{
+%        commit      => Commit,
+%        author      => Author,
+%        date        => Date,
+%        description => Desc
+%    },
+%    bin_to_map(Bins, [Map | Maps]).
