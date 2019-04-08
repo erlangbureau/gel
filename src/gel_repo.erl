@@ -73,7 +73,7 @@ log(Repository) ->
 log([], Result) ->
     {ok, Result};
 log([Binary | BinTail], Maps) ->
-    _[PredCommit, WithoutPredCommit] = binary:split(Binary,[<<" ">>]),
+    [_PredCommit, WithoutPredCommit] = binary:split(Binary,[<<" ">>]),
     [Commit, WithoutCommit] = binary:split(WithoutPredCommit,[<<" ">>]),
     [AuthorIncomplete, WithoutAuthor] = binary:split(WithoutCommit,[<<"> ">>]),
     Author = <<AuthorIncomplete/binary, ">">>,
