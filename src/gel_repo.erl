@@ -72,7 +72,7 @@ log(Repository) ->
 
 log([], Result) ->
     {ok, Result};
-loog([<<>> | BinTail], Result) ->
+log([<<>> | BinTail], Result) ->
     log(BinTail, Result);
 log([Binary | BinTail], Maps) ->
     [_PredCommit, WithoutPredCommit] = binary:split(Binary,[<<" ">>]),
