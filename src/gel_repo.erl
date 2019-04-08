@@ -73,12 +73,12 @@ log(Repository) ->
 log([], Result) ->
     {ok, Result};
 log([Binary | BinTail], Maps) ->
-    [PredCommit, WithoutPredCommit] = binary:split(Bin,[<<" ">>]),
+    _[PredCommit, WithoutPredCommit] = binary:split(Binary,[<<" ">>]),
     [Commit, WithoutCommit] = binary:split(WithoutPredCommit,[<<" ">>]),
     [AuthorIncomplete, WithoutAuthor] = binary:split(WithoutCommit,[<<"> ">>]),
     Author = <<AuthorIncomplete/binary, ">">>,
     [DateTime, WithoutDateTime] = binary:split(WithoutAuthor,[<<"\t">>]),
-    [Seconds, TimeZone] = binary:split(WithoutAuthor,[<<" ">>]),
+    [Seconds, _TimeZone] = binary:split(DateTime,[<<" ">>]),
     [Action, Description] = binary:split(WithoutDateTime,[<<": ">>]),
     Result = 
         case Action of
@@ -87,7 +87,7 @@ log([Binary | BinTail], Maps) ->
                     commit      => Commit,
                     author      => Author,
                     time        => Seconds,
-                    description => Desc
+                    description => Description
                 },
                 [Map | Maps];
             _ ->
