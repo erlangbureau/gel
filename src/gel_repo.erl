@@ -53,9 +53,7 @@ commit(Repository, Commit) ->
 checkout(Repository, Branch) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    [10,48,10 | Result] = lists:reverse(os:cmd("cd " ++ Path ++ 
-        " && git checkout " ++ Branch ++ " && echo $?")),
-    {ok, lists:reverse(Result)}.
+    file:write_file(Path ++ "/.git/HEAD", <<"ref: refs/heads/", (list_to_binary(Branch))/binary>>).
 
 merge(Repository, Branch) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
@@ -89,7 +87,6 @@ log([Binary | BinTail], Maps) ->
                     commit      => Commit,
                     author      => Author,
                     time        => Seconds,
-                    time_zone   => TimeZone,
                     description => Desc
                 },
                 [Map | Maps];
@@ -97,28 +94,3 @@ log([Binary | BinTail], Maps) ->
                 Maps
         end,
     log(BinTail, Result).
-
-%log(Repository) ->
-%    {ok, Dir} = application:get_env(gel, repos_dir),
-%    Path      = Dir ++ Repository,
-%    [10,48,10 | ReversedList] = lists:reverse(os:cmd("cd " ++ Path ++ 
-%        " && git log && echo $?")),
-%    Binary = list_to_binary(lists:reverse(ReversedList)),
-%    [_ | ListOfBinary] = binary:split(<<"\n\n", Binary/binary>>, [<<"\n\ncommit ">>], [global]),
-%    bin_to_map(ListOfBinary).
-
-%bin_to_map(Bins) ->
-%    bin_to_map(Bins, []).
-%bin_to_map([], Maps) ->
-%    {ok, Maps};
-%bin_to_map([Bin | Bins], Maps) ->
-%    [Commit, WithoutCommit] = binary:split(Bin,[<<"\nAuthor: ">>]),
-%    [Author, WithoutAuthor] = binary:split(WithoutCommit, [<<"\nDate:   ">>]),
-%    [Date, Desc] = binary:split(WithoutAuthor, [<<"\n\n    ">>]),
-%    Map = #{
-%        commit      => Commit,
-%        author      => Author,
-%        date        => Date,
-%        description => Desc
-%    },
-%    bin_to_map(Bins, [Map | Maps]).
