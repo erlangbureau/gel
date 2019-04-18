@@ -2,7 +2,7 @@
 -author("Kalyta Bogdan").
 
 %% API
--export([init/1]).
+-export([init/1, init/2]).
 -export([pull/1, push/1]).
 -export([commit/2]).
 -export([checkout/2, merge/2]).
@@ -12,7 +12,9 @@
 
 %% API
 init(Repository) ->
-    gel_repo:init(to_list(Repository)).
+    gel_repo:init(to_list(Repository), to_list(Repository)).
+init(Repository, Readme) ->
+    gel_repo:init(to_list(Repository), to_list(Readme)).
 
 pull(Repository) ->
     gel_repo:pull(to_list(Repository)).
@@ -29,9 +31,9 @@ checkout(Repository, Branch) ->
 merge(Repository, Branch) ->
     ListRepository = to_list(Repository),
     ListBranch     = to_list(Branch),
-    {ok, _} = checkout(ListRepository, "master"),
+    ok = checkout(ListRepository, "master"),
     {ok, Result} = gel_repo:merge(ListRepository, ListBranch),
-    {ok, _} = checkout(ListRepository, ListBranch),
+    ok = checkout(ListRepository, ListBranch),
     {ok, Result}.
 
 log(Repository) ->
