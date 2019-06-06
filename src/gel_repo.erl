@@ -21,16 +21,32 @@ init(Repository, Readme) ->
     Path      = Dir ++ Repository,
     case file:make_dir(Path) of
         ok ->
-            [10,48,10 | _] = lists:reverse(os:cmd("cd "++ Path ++ 
+            ListInit = os:cmd("cd "++ Path ++ 
                 " && git init && echo yes | git remote add origin " ++ Url ++ 
-                " && echo $?")),
-            ok = file:write_file(Path++"/README.MD",list_to_binary(Readme)),
-            {ok, _}   = commit(Repository, "initial commit"),
-            [10,48,10 | _] = lists:reverse(os:cmd("cd " ++ Path ++ 
-                " && git push -u origin master && echo $?")),
-            [10,48,10 | _] = lists:reverse(os:cmd("cd " ++ Path ++ " && git "
-                "checkout -b devel && git push -u origin devel && echo $?")),
-            {ok, list_to_binary(Url)};
+                " && echo OK || echo Failed"),
+            case lists:suffix("Failed", ListInit) of
+                false ->
+                    ok = file:write_file(Path++"/README.MD",list_to_binary(Readme)),
+                    {ok, _}   = commit(Repository, "initial commit"),
+                    ListPush = os:cmd("cd " ++ Path ++ 
+                        " && git push -u origin master && echo OK || echo Failed"),
+                    case lists:suffix("Failed", ListPush) of
+                        false ->
+                            ListCheckout = lists:reverse(os:cmd("cd " ++ Path ++
+                                " && git checkout -b devel && git push -u origin devel"
+                                " && echo OK || echo Failed")),
+                            case lists:suffix("Failed", ListCheckout) of
+                                false ->
+                                    {ok, list_to_binary(Url)};
+                                true ->
+                                    {error, ListCheckout}
+                            end;
+                        true ->
+                            {error, ListPush}
+                    end;
+                true ->
+                    {error, ListInit}
+            end;
         _ ->
             {error, 'name already exists on this account'}
     end.
@@ -38,53 +54,73 @@ init(Repository, Readme) ->
 pull(Repository) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    [10,48,10 | Result] = lists:reverse(os:cmd("cd " ++ Path ++ 
-        " && git pull && echo $?")),
-    {ok, lists:reverse(Result)}.
+    ListPull = os:cmd("cd " ++ Path ++ " && git pull && echo OK || echo Failed"),
+    case lists:suffix("Failed", ListPull) of
+        false ->
+            {ok, ListPull};
+        true ->
+            {error, ListPull}
+    end.
 
 push(Repository) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    [10,48,10 | Result] = lists:reverse(os:cmd("cd " ++ Path ++ 
-        " && git push && echo $?")),
-    {ok, lists:reverse(Result)}.
+    ListPush = os:cmd("cd " ++ Path ++ 
+        " && git push && echo OK || echo Failed"),
+    case lists:suffix("Failed", ListPush) of
+        false ->
+            {ok, ListPush};
+        true ->
+            {error, ListPush}
+    end.
 
 commit(Repository, Commit) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    [10,48,10 | Result] = lists:reverse(os:cmd("cd " ++ Path ++ 
-        " && git add * && git commit -m \"" ++ Commit ++ "\" -a && echo $?")),
-    {ok, lists:reverse(Result)}.
+    ListCommit = lists:reverse(os:cmd("cd " ++ Path ++ 
+        " && git add * && git commit -m \"" ++ Commit ++ "\" -a"
+        " && echo OK || echo Failed"),
+    case lists:suffix("Failed", ListCommit) of
+        false ->
+            {ok, ListCommit};
+        true ->
+            {error, ListCommit}
+    end.
 
 merge(Repository, Branch) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    [10,48,10 | Result] = lists:reverse(os:cmd("cd " ++ Path ++ 
-        " && git merge " ++ Branch ++ " && echo $?")),
+    ListMerge = os:cmd("cd " ++ Path ++ 
+        " && git merge " ++ Branch ++ " && echo OK || echo Failed"),
     {ok, _}   = push(Repository),
-    {ok, lists:reverse(Result)}.
+    case lists:suffix("Failed", ListMerge) of
+        false ->
+            {ok, ListMerge};
+        true ->
+            {error, ListMerge}
+    end.
 
 %%  completed
 checkout(Repository, Branch) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    ok = file:write_file(Path ++ "/.git/HEAD", 
+    PathBin   = list_to_binary(Path),
+    ok        = file:write_file(Path ++ "/.git/HEAD", 
         <<"ref: refs/heads/", (list_to_binary(Branch))/binary>>),
     {ok, BranchHash} = file:read_file(Path ++ "/.git/refs/heads/" ++ Branch),
     <<BranchDir:2/binary, BranchFileName:38/binary, _/binary>> = BranchHash,
-    PathBin = list_to_binary(Path),
     {ok, BranchFile} = file:read_file(<<PathBin/binary, "/.git/objects/", 
         BranchDir/binary, "/", BranchFileName/binary>>),
-    UnzippedBranch = zlib:uncompress(BranchFile),
+    UnzippedBranch   = zlib:uncompress(BranchFile),
     [_C, <<"tree ", TreeDir:2/binary, TreeFileName:38/binary, _BInfo/binary>>] =
         binary:split(UnzippedBranch, [<<0>>]),
-    {ok, TreeFile} = file:read_file(<<PathBin/binary, "/.git/objects/", 
+    {ok, TreeFile}   = file:read_file(<<PathBin/binary, "/.git/objects/", 
         TreeDir/binary, "/", TreeFileName/binary>>),
-    UnzippedTree = zlib:uncompress(TreeFile),
+    UnzippedTree     = zlib:uncompress(TreeFile),
     [Tree, TreeData] = binary:split(UnzippedTree, [<<0>>]),
-    {ok, OldFiles} = file:list_dir(Path),
-    ok = delete_old_files(Path, lists:delete(".git", OldFiles)),
-    {ok, FilesData} = checkout(Tree, TreeData, PathBin),
+    {ok, OldFiles}   = file:list_dir(Path),
+    ok               = delete_old_files(Path, lists:delete(".git", OldFiles)),
+    {ok, FilesData}  = checkout(Tree, TreeData, PathBin),
     update_index(<<TreeDir/binary, TreeFileName/binary>>, FilesData, PathBin).
             
 checkout(Type, Data, Path) ->
@@ -130,7 +166,9 @@ checkout(<<"tree", TreeId/binary>>, Data, Path, CurrentPath, Acc) ->
     },
 %    case file:read_file(<<CurrentPath/binary, "/", FileName/binary>>) of
 %        {ok, FileRepoData} ->
-%            CurrentHash = lists:flatten([io_lib:format("~2.16.0b",[X]) || <<X:8>> <= crypto:hash(sha, <<Type/binary, "\0", FileRepoData/binary>>)]), %% Type = "blob " + byte_size(FileRepoData)
+%            CurrentHash = lists:flatten(
+%               [io_lib:format("~2.16.0b",[X]) || <<X:8>> <= crypto:hash(sha, 
+%               <<Type/binary, "\0", FileRepoData/binary>>)]), %% Type = "blob " + byte_size(FileRepoData)
 %            case <<Dir:2/binary, File:38/binary>> == CurrentHash of
 %                true ->
 %                    ok;
