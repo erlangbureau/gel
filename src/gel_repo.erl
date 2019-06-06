@@ -77,7 +77,7 @@ push(Repository) ->
 commit(Repository, Commit) ->
     {ok, Dir} = application:get_env(gel, repos_dir),
     Path      = Dir ++ Repository,
-    ListCommit = lists:reverse(os:cmd("cd " ++ Path ++ 
+    ListCommit = os:cmd("cd " ++ Path ++ 
         " && git add * && git commit -m \"" ++ Commit ++ "\" -a"
         " && echo OK || echo Failed"),
     case lists:suffix("Failed", ListCommit) of
