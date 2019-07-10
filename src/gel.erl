@@ -2,7 +2,7 @@
 -author("Kalyta Bogdan").
 
 %% API
--export([init/1, init/2]).
+-export([init/2, init/3]).
 -export([pull/1, push/1]).
 -export([commit/2]).
 -export([checkout/2, merge/2]).
@@ -11,10 +11,10 @@
 -export([to_list/1]).
 
 %% API
-init(Repository) ->
-    gel_repo:init(to_list(Repository), to_list(Repository)).
-init(Repository, Readme) ->
-    gel_repo:init(to_list(Repository), to_list(Readme)).
+init(Dir, FolderName) ->
+    gel_repo:init(to_list(Dir), to_list(FolderName), to_list(FolderName)).
+init(Dir, FolderName, Readme) ->
+    gel_repo:init(to_list(Dir), to_list(FolderName), to_list(Readme)).
 
 pull(Repository) ->
     gel_repo:pull(to_list(Repository)).
