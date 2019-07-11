@@ -5,7 +5,7 @@
 
 %% API
 %%  cmd
--export([init/3]).
+-export([init/2]).
 -export([pull/1, push/1]).
 -export([commit/2]).
 -export([merge/2]).
@@ -15,16 +15,16 @@
 
 %% API
 %%  cmd
-init(Dir, FolderName, Readme) ->
-    {ok, Url} = gel_hub:new(FolderName),
-    Path      = Dir ++ FolderName,
+init(Path, Readme) ->
+    Repository = filename:basename(Path),
+    {ok, Url} = gel_hub:new(Repository),
     ListInit = os:cmd("cd "++ Path ++
         " && git init && echo yes | git remote add origin " ++ Url ++
         " && echo OK || echo Failed"),
     case lists:suffix("Failed", ListInit) of
         false ->
             ok = file:write_file(Path++"/README.MD",list_to_binary(Readme)),
-            {ok, _}   = commit(FolderName, "initial commit"),
+            {ok, _}   = commit(Repository, "initial commit"),
             ListPush = os:cmd("cd " ++ Path ++
                 " && git push -u origin master && echo OK || echo Failed"),
             case lists:suffix("Failed", ListPush) of

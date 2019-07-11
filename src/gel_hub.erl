@@ -9,14 +9,14 @@
 new(Repository) ->
     {ok, Token} = application:get_env(gel, github_access_token),
     Map = #{
-        name => list_to_binary(Repository), 
-        description => <<"Created with Git Erlang Library">>, 
+        name => list_to_binary(Repository),
+        description => <<"Created with Git Erlang Library">>,
         private => true
     },
     Json = jsx:encode(Map),
     Url = "https://api.github.com/user/repos",
     Headers = [
-        {"Authorization", "token " ++ Token}, 
+        {"Authorization", "token " ++ Token},
         {"User-Agent", "Gel"}
     ],
     Opts   = [{body_format, binary}],

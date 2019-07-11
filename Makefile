@@ -3,4 +3,4 @@ PROJECT_DESCRIPTION = Git Erlang Library
 PROJECT_VERSION = 0.1.0
 
 
-include erlang.mk
+include $(if $(ERLANG_MK_FILENAME),$(ERLANG_MK_FILENAME),erlang.mk)
